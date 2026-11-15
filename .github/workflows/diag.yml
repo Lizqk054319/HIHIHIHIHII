@@ -1,0 +1,19 @@
+name: diag
+on: [push]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Firebase
+        run: |
+          KEY=AIzaSyDEStEOgeoQ0P7pCsH8VlwLppqUKnyKd8o
+          DB=https://kosavisuals-1bf23-default-rtdb.europe-west1.firebasedatabase.app
+          R=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"returnSecureToken":true}' "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=$KEY")
+          echo "SIGNUP: $(echo "$R" | head -c 300)"
+          T=$(echo "$R" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("idToken",""))')
+          echo "USERS:"; curl -s "$DB/users.json?auth=$T" | head -c 3000; echo
+          echo "RANKS:"; curl -s "$DB/ranks.json?auth=$T" | head -c 500; echo
+          echo "CHATMETA:"; curl -s "$DB/chatmeta.json?auth=$T" | head -c 800; echo
+          echo "INBOX:"; curl -s "$DB/inbox.json?shallow=true&auth=$T" | head -c 500; echo
+          echo "PUTTEST:"; curl -s -X PUT -d '{"seen":{".sv":"timestamp"}}' "$DB/diag.json?auth=$T"; echo
+          echo "NOAUTH:"; curl -s "$DB/users.json" | head -c 200; echo
